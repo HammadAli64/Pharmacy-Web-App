@@ -1,0 +1,11 @@
+<nav class="bg-blue-800 text-white p-4 shadow-md">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+        <div class="flex space-x-4">
+            <a href="{% url 'pharmacy:dashboard' %}" class="hover:bg-blue-700 px-3 py-2 rounded">Home</a>
+            <a href="{% url 'pharmacy:sales' %}" class="hover:bg-blue-700 px-3 py-2 rounded">Sales</a>
+            <a href="{% url 'pharmacy:ultrasound_appointment' %}" class="hover:bg-blue-700 px-3 py-2 rounded">Ultrasound Appointment</a>
+            <a href="{% url 'pharmacy:medicine_list' %}" class="hover:bg-blue-700 px-3 py-2 rounded">Medicines</a>
+            <a href="{% url 'pharmacy:sales_history' %}" class="hover:bg-blue-700 px-3 py-2 rounded">Sales History</a>
+        </div>
+    </div>
+</nav>

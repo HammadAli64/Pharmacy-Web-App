@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Ultrasound Appointment History</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+
+        nav {
+            background-color: #007bff;
+            padding: 10px 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        nav .navbar-brand, nav .nav-link {
+            color: #fff;
+            text-decoration: none;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+        nav .nav-link.active {
+            text-decoration: underline;
+        }
+
+        h1, h2 {
+            color: #2c3e50;
+        }
+
+        form {
+            background-color: #ffffff;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        label {
+            margin-right: 10px;
+            font-weight: 600;
+        }
+
+        input[type="date"] {
+            padding: 7px 10px;
+            margin-right: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        button {
+            padding: 8px 16px;
+            background-color: #007bff;
+            border: none;
+            color: white;
+            cursor: pointer;
+            border-radius: 4px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #fff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        th, td {
+            border: 1px solid #dee2e6;
+            padding: 12px 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f1f3f5;
+            font-weight: 600;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        tfoot td {
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            form, table, nav {
+                font-size: 14px;
+            }
+
+            input[type="date"], button {
+                margin-bottom: 10px;
+                display: block;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4 shadow" style="display: flex; justify-content: space-between; align-items: center;">
+    <a class="navbar-brand" href="{% url 'pharmacy:dashboard' %}">AL-Rehmat Clinic</a>
+    <div class="navbar-nav" style="display: flex; flex-wrap: wrap; justify-content: flex-start;">
+        <a class="nav-link" href="{% url 'pharmacy:dashboard' %}">Home</a>
+        <a class="nav-link" href="{% url 'pharmacy:sales' %}">Sales</a>
+        <a class="nav-link" href="{% url 'pharmacy:ultrasound_appointment' %}">Generate Token</a>
+        <a class="nav-link" href="{% url 'pharmacy:medicine_list' %}">Medicines</a>
+        <a class="nav-link" href="{% url 'pharmacy:sales_history' %}">Sales History</a>
+        <a class="nav-link" href="{% url 'pharmacy:ultrasound_appointment_history' %}">Token History</a>
+    </div>
+</nav>
+
+
+    <h1>Ultrasound Appointment History</h1>
+
+    <form method="get" action="">
+        <label for="start_date">From:</label>
+        <input type="date" id="start_date" name="start_date" value="{{ start_date }}">
+        <label for="end_date">To:</label>
+        <input type="date" id="end_date" name="end_date" value="{{ end_date }}">
+        <button type="submit">Filter</button>
+    </form>
+
+    <h2>Total Profit: {{ total_profit }}</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Token Number</th>
+            <th>Name</th>
+            <th>Number</th>
+            <th>Ultrasound</th>
+            <th>Price</th>
+            <th>Date & Time</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for appointment in appointments %}
+        <tr>
+            <td>{{ appointment.auto_token_number }}</td>
+            <td>{{ appointment.name }}</td>
+            <td>{{ appointment.number }}</td>
+            <td>{{ appointment.ultrasound.name }}</td>
+            <td>{{ appointment.price }}</td>
+            <td>{{ appointment.date_time }}</td>
+            <td>
+                <form method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="appointment_id" value="{{ appointment.id }}">
+                    <button type="submit" onclick="return confirm('Are you sure you want to return this appointment?');" style="background-color: #dc3545;">Return</button>
+                </form>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="7">No appointments found for the selected date range.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+</body>
+</html>

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Return Medicine</title>
+</head>
+<body>
+    <h1>Return Medicine</h1>
+
+    <!-- CSRF token must be included -->
+    {% csrf_token %}
+
+    <form id="returnForm">
+        <label>Medicine Name:
+            <input type="text" name="medicine_name" required>
+        </label><br>
+        <label>Quantity:
+            <input type="number" name="quantity" required>
+        </label><br>
+        <label>Reason:
+            <textarea name="reason"></textarea>
+        </label><br>
+        <button type="submit">Return</button>
+    </form>
+
+    <p id="response"></p>
+
+    <script>
+        function getCSRFToken() {
+            const cookieValue = document.cookie.split('; ')
+                .find(row => row.startsWith('csrftoken='))
+                ?.split('=')[1];
+            return cookieValue;
+        }
+
+        document.getElementById('returnForm').onsubmit = async function(e) {
+            e.preventDefault();
+
+            const form = new FormData(e.target);
+            const data = {
+                medicine_name: form.get('medicine_name'),
+                quantity: form.get('quantity'),
+                reason: form.get('reason')
+            };
+
+            const response = await fetch('/return/', {  // current URL
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCSRFToken()
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+            document.getElementById('response').innerText = result.message || result.error;
+        };
+    </script>
+</body>
+</html>

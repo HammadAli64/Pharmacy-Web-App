@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ultrasound Appointment Receipt</title>
+    <style>
+        @media print {
+            #print-button {
+                display: none;
+            }
+            body {
+                margin: 0;
+            }
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            width: 230px; /* ~58mm */
+            margin: auto;
+            font-size: 12px;
+        }
+
+        h1 {
+            font-size: 13px;
+            text-align: center;
+            margin: 2px 0;
+        }
+
+        p {
+            margin: 2px 0;
+        }
+
+        .datetime {
+            text-align: center;
+            font-size: 11px;
+            margin: 5px 0;
+        }
+
+        .receipt-line {
+            display: flex;
+            justify-content: space-between;
+            margin: 2px 0;
+        }
+
+        .separator {
+            border-top: 1px dashed #000;
+            margin: 6px 0;
+        }
+
+        .bold {
+            font-weight: bold;
+        }
+
+        /* Center the footer messages */
+        .centered {
+            text-align: center;
+            font-size: 10px;
+            margin: 5px 0;
+        }
+    </style>
+    <script>
+        window.onload = function() {
+            window.print();
+        };
+    </script>
+</head>
+<body>
+
+    <h1 class="bold">
+        {{ pharmacy_name|linebreaksbr }}
+    </h1>
+    <h3>{{ doctor_name }}</h3>
+
+    <div class="separator"></div>
+
+    <div class="receipt-line">
+        <span class="bold">Token #</span>
+        <span>{{ appointment.auto_token_number|stringformat:"02d" }}</span>
+    </div>
+    <div class="receipt-line">
+        <span class="bold">Patient Name</span>
+        <span>{{ name }}</span>
+    </div>
+    <div class="receipt-line">
+        <span class="bold">Number</span>
+        <span>{{ number }}</span>
+    </div>
+    <div class="receipt-line">
+        <span class="bold">Ultrasound</span>
+        <span>{{ ultrasound_name }}</span>
+    </div>
+    <div class="receipt-line">
+        <span class="bold">Price</span>
+        <span>Rs {{ price }}</span>
+    </div>
+
+    <div class="separator"></div>
+
+    <!-- Centered "Thank you" message -->
+    <p class="centered">Thank you for your visit!</p>
+
+    <div class="datetime">
+        <p>{{ date_time }}</p>
+    </div>
+
+    <!-- Centered footer contact info -->
+    <p class="centered"><b>Software is Developed by Hammad Ali. For any type of Software, Contact: 0310-4777353</b></p>
+
+    <button id="print-button" onclick="window.print()">Print Receipt</button>
+
+</body>
+</html>

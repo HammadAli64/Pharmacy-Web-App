@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Sales History & Return Medicine</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-indigo-500 to-blue-400 flex flex-col items-center justify-start p-6 text-gray-800">
+
+
+  <!-- Tailwind Navbar -->
+  <nav class="w-full max-w-6xl bg-indigo-700 text-white rounded-lg shadow-lg mb-6">
+    <div class="flex flex-wrap justify-between items-center px-6 py-4">
+      <a href="{% url 'pharmacy:dashboard' %}" class="text-xl font-bold">AL-Rehmat Clinic</a>
+      <div class="flex gap-4 text-sm sm:text-base">
+        <a href="{% url 'pharmacy:dashboard' %}" class="hover:text-gray-200 font-semibold">Home</a>
+        <a href="{% url 'pharmacy:sales' %}" class="hover:text-gray-200 font-semibold">Sales</a>
+        <a href="{% url 'pharmacy:ultrasound_appointment' %}" class="hover:text-gray-200 font-semibold">Generate Token</a>
+        <a href="{% url 'pharmacy:medicine_list' %}" class="hover:text-gray-200 font-semibold">Medicines</a>
+        <a href="{% url 'pharmacy:sales_history' %}" class="hover:text-gray-200 font-semibold">Sales History</a>
+        <a href="{% url 'pharmacy:ultrasound_appointment_history' %}" class="hover:text-gray-200 font-semibold">Token History</a>
+
+      </div>
+    </div>
+  </nav>
+
+    <!-- Return Medicine Form -->
+    <div class="bg-white shadow-xl rounded-2xl w-full max-w-6xl p-8 mb-10">
+        <h2 class="text-3xl font-bold mb-6 text-center">Return Medicine</h2>
+
+        <form id="returnForm" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {% csrf_token %}
+            <div>
+                <label class="block font-medium mb-1">Medicine Name:</label>
+                <input type="text" name="medicine_name" required class="w-full p-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-indigo-400" />
+            </div>
+            <div>
+                <label class="block font-medium mb-1">Quantity:</label>
+                <input type="number" name="quantity" required class="w-full p-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-indigo-400" />
+            </div>
+
+            <div class="md:col-span-2 flex justify-end">
+                <button type="submit" class="bg-red-600 text-white px-6 py-2 rounded-md hover:bg-red-700 transition">Return</button>
+            </div>
+        </form>
+
+        <p id="response" class="mt-4 font-semibold text-green-700"></p>
+    </div>
+
+    <!-- Sales History Section -->
+    <div class="bg-white shadow-2xl rounded-2xl w-full max-w-6xl p-8">
+        <h1 class="text-4xl font-bold text-center mb-6">Sales History of Medicines</h1>
+
+        <!-- Filter Form with Total Profit displayed -->
+        <form method="get" class="flex flex-col md:flex-row gap-4 items-center justify-center mb-4">
+            <div>
+                <label class="block text-gray-700 font-medium mb-1">Start Date:</label>
+                <input type="date" name="start_date" value="{{ request.GET.start_date }}" class="p-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-indigo-400" />
+            </div>
+            <div>
+                <label class="block text-gray-700 font-medium mb-1">End Date:</label>
+                <input type="date" name="end_date" value="{{ request.GET.end_date }}" class="p-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-indigo-400" />
+            </div>
+            <div class="pt-6 md:pt-0">
+                <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 transition">Filter</button>
+            </div>
+            <div class="ml-auto pt-6 md:pt-0 text-lg font-semibold text-indigo-700">
+                Total Profit: Rs <span id="total-profit">{{ total_profit|floatformat:2 }}</span>
+            </div>
+        </form>
+
+        <!-- Sales Table -->
+        <div class="overflow-x-auto">
+            <table class="w-full table-auto border-collapse text-sm text-left">
+                <thead class="bg-indigo-600 text-white">
+                    <tr>
+                        <th class="px-4 py-3">Medicine</th>
+                        <th class="px-4 py-3">Quantity Sold</th>
+                        <th class="px-4 py-3">Profit</th>
+                        <th class="px-4 py-3">Sale Date</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white text-gray-700">
+                    {% for sale in sales %}
+                        {% for item in sale.items.all %}
+                            <tr class="border-t hover:bg-indigo-50">
+                                <td class="px-4 py-2">{{ item.medicine_name }}</td>
+                                <td class="px-4 py-2 flex items-center gap-2">
+                                    <input
+                                        type="number"
+                                        value="{{ item.quantity }}"
+                                        class="editable-qty p-1 border border-gray-300 rounded w-20"
+                                        data-sale-id="{{ sale.id }}"
+                                        data-medicine-name="{{ item.medicine_name }}"
+                                        min="0"
+                                    />
+                                </td>
+                                <td class="px-4 py-2 profit-cell">Rs {{ item.profit|floatformat:2 }}</td>
+                                <td class="px-4 py-2">{{ sale.date_time|date:"Y-m-d" }}</td>
+                            </tr>
+                        {% endfor %}
+                    {% empty %}
+                        <tr>
+                            <td colspan="4" class="px-4 py-4 text-center text-gray-500">No sales available.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // CSRF helper function moved outside DOMContentLoaded for global access
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Update quantity handler with AJAX
+            async function updateQuantity(input) {
+                console.log('updateQuantity called');
+                const quantity = input.value;
+                const saleId = input.dataset.saleId;
+                const medicineName = input.dataset.medicineName;
+                const csrfToken = getCookie('csrftoken');
+
+                if (quantity === '' || isNaN(quantity) || quantity < 0) {
+                    alert('Please enter a valid non-negative quantity.');
+                    return;
+                }
+
+                try {
+                    const response = await fetch('/update-sale-quantity/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrfToken,
+                        },
+                        body: JSON.stringify({
+                            sale_id: saleId,
+                            medicine_name: medicineName,
+                            quantity: quantity
+                        })
+                    });
+
+                    const result = await response.json();
+                    console.log('AJAX response:', result);
+
+                    if (!result.success) {
+                        alert('Error: ' + result.error);
+                    } else {
+                        // Update profit for this row
+                        const profitCell = input.closest('tr').querySelector('.profit-cell');
+                        profitCell.textContent = 'Rs ' + parseFloat(result.new_profit).toFixed(2);
+
+                        // Update total profit display
+                        document.getElementById('total-profit').textContent = parseFloat(result.total_profit).toFixed(2);
+                    }
+                } catch (error) {
+                    alert('Unexpected error: ' + error);
+                }
+            }
+
+            // Attach event listeners: update on Enter or blur (change)
+            document.querySelectorAll('.editable-qty').forEach(input => {
+                input.addEventListener('keydown', e => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        updateQuantity(input);
+                    }
+                });
+                input.addEventListener('change', () => updateQuantity(input));
+            });
+
+            // Attach event listeners to Apply buttons
+            document.querySelectorAll('.apply-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    const input = button.previousElementSibling;
+                    if (input) {
+                        updateQuantity(input);
+                    }
+                });
+            });
+        });
+
+        // Handle return form submission via AJAX
+        document.getElementById('returnForm').onsubmit = async function (e) {
+            e.preventDefault();
+
+            const form = new FormData(e.target);
+            const data = {
+                medicine_name: form.get('medicine_name'),
+                quantity: form.get('quantity'),
+            };
+
+            try {
+                const response = await fetch('/return/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                const responseEl = document.getElementById('response');
+                responseEl.innerText = result.message || result.error || 'Unknown response';
+                responseEl.classList.remove('text-red-600', 'text-green-700');
+                if (result.success) {
+                    responseEl.classList.add('text-green-700');
+                } else {
+                    responseEl.classList.add('text-red-600');
+                }
+            } catch (error) {
+                alert('Unexpected error: ' + error);
+            }
+        };
+    </script>
+
+</body>
+</html>

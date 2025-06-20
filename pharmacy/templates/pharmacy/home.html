@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pharmacy Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-blue-900 via-indigo-800 to-blue-600 flex flex-col items-center justify-center text-white font-sans px-4 py-12">
+
+    <div class="bg-white bg-opacity-10 backdrop-blur-md rounded-3xl shadow-2xl p-12 max-w-6xl w-full">
+        <h1 class="text-6xl font-extrabold text-center text-white mb-12">AL-Rehmat Clinic Control Panel</h1>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 mb-12">
+            <a href="{% url 'pharmacy:sales' %}" class="bg-white bg-opacity-90 text-blue-900 font-extrabold text-xl rounded-2xl shadow-lg py-5 px-8 text-center hover:bg-yellow-100 hover:scale-105 transition duration-300 ease-in-out">💊 Go To Sale</a>
+            <a href="{% url 'pharmacy:ultrasound_appointment' %}" class="bg-white bg-opacity-90 text-blue-900 font-extrabold text-xl rounded-2xl shadow-lg py-5 px-8 text-center hover:bg-yellow-100 hover:scale-105 transition duration-300 ease-in-out">🧾 Generate Tokens</a>
+            <a href="{% url 'pharmacy:medicine_list' %}" class="bg-white bg-opacity-90 text-blue-900 font-extrabold text-xl rounded-2xl shadow-lg py-5 px-8 text-center hover:bg-yellow-100 hover:scale-105 transition duration-300 ease-in-out">🧪 Medicines Stock</a>
+            <a href="{% url 'pharmacy:sales_history' %}" class="bg-white bg-opacity-90 text-blue-900 font-extrabold text-xl rounded-2xl shadow-lg py-5 px-8 text-center hover:bg-yellow-100 hover:scale-105 transition duration-300 ease-in-out">📈 Profits & Returns</a>
+            <a href="{% url  'pharmacy:ultrasound_appointment_history'%}" class="bg-white bg-opacity-90 text-blue-900 font-extrabold text-xl rounded-2xl shadow-lg py-5 px-8 text-center hover:bg-yellow-100 hover:scale-105 transition duration-300 ease-in-out">🔖 History of Tokens</a>
+            <a href="{% url 'pharmacy:sales_history' %}" class="bg-white bg-opacity-90 text-blue-900 font-extrabold text-xl rounded-2xl shadow-lg py-5 px-8 text-center hover:bg-yellow-100 hover:scale-105 transition duration-300 ease-in-out">↩️ Returns of Medicines</a>
+        </div>
+
+        <hr class="border-t border-white border-opacity-30 mb-8">
+
+        <div class="text-center space-y-4">
+            <p class="text-2xl font-extrabold text-white">Quick Links:</p>
+            <div class="flex flex-wrap justify-center gap-6 text-lg font-bold text-white underline">
+                <a href="{% url 'pharmacy:sales_history' %}">🔍 Sales History</a>
+                <a href="{% url 'pharmacy:medicine_list' %}">📋 All Medicines</a>
+                <a href="{% url 'pharmacy:sales_history' %}">🔁 View Returns</a>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pharmacy Sales</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+            padding: 30px;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        h1, h2 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+       #medicine-dropdown {
+    width: 400px; /* Adjust to whatever width you want */
+    position: absolute;
+    z-index: 1050;
+}
+
+
+
+
+        #medicine-dropdown option {
+            font-weight: bold;
+        }
+
+        .btn-primary {
+            width: 100%;
+        }
+
+        table th, table td {
+            text-align: center;
+        }
+
+        #proceed {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4 shadow">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold" href="{% url 'pharmacy:dashboard' %}">AL-Rehmat Clinic</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link fw-bold" href="{% url 'pharmacy:dashboard' %}">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link fw-bold" href="{% url 'pharmacy:sales' %}">Sales</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link fw-bold" href="{% url 'pharmacy:ultrasound_appointment' %}">Generate Token</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link fw-bold" href="{% url 'pharmacy:medicine_list' %}">Medicines</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link fw-bold" href="{% url 'pharmacy:sales_history' %}">Sales History</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link fw-bold" href="{% url 'pharmacy:ultrasound_appointment_history' %}">Token History</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+
+    <h1 class="text-primary">Pharmacy Sales</h1>
+
+    <div class="row mb-4">
+<div class="col-md-6 offset-md-3 position-relative">
+    <label for="search" class="form-label">Search Medicine (Enter first letter):</label>
+    <input type="text" class="form-control" id="search" maxlength="1" autocomplete="off" placeholder="e.g. A" />
+    <select class="form-select mt-2" id="medicine-dropdown" size="5" style="display:none;"></select>
+</div>
+
+    </div>
+
+    <h2 class="text-secondary">Cart</h2>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped" id="cart-table">
+            <thead class="table-dark">
+            <tr>
+                <th>Medicine</th>
+                <th>Quantity</th>
+                <th>Price (Rs.)</th>
+                <th>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>Action</span>
+                        <button id="clear-cart" class="btn btn-sm btn-danger">Clear Cart</button>
+                    </div>
+                </th>
+            </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 offset-md-3 text-end">
+            <p class="fw-bold fs-5">Total: Rs. <span id="cart-total">0.00</span></p>
+            <button id="proceed" class="btn btn-primary">Proceed to Receipt</button>
+        </div>
+    </div>
+
+</div>
+
+<!-- JavaScript Section -->
+<script>
+    let medicines = [];
+    let cart = [];
+
+    function updateCartTable() {
+        let tbody = $('#cart-table tbody');
+        tbody.empty();
+        let total = 0;
+        cart.forEach((item, index) => {
+            let row = `<tr>
+                <td>${item.name}</td>
+                <td>
+                    <input type="number" class="form-control form-control-sm quantity-input" data-index="${index}" value="${item.quantity}" min="1" style="width: 80px; margin: auto;" />
+                </td>
+                <td class="row-total">${(item.price * item.quantity).toFixed(2)}</td>
+                <td>
+                    <button class="btn btn-sm btn-danger delete-btn" data-index="${index}">Delete</button>
+                </td>
+            </tr>`;
+            tbody.append(row);
+            total += item.price * item.quantity;
+        });
+        $('#cart-total').text(total.toFixed(2));
+        sessionStorage.setItem('cart', JSON.stringify(cart));
+    }
+
+    $('#search').on('input', function () {
+        let query = $(this).val();
+        if (query.length === 1) {
+            $.ajax({
+                url: "{% url 'pharmacy:search_medicines' %}",
+                data: { q: query },
+                success: function (data) {
+                    medicines = data;
+                    let dropdown = $('#medicine-dropdown');
+                    dropdown.empty();
+                    if (medicines.length > 0) {
+                        medicines.forEach(med => {
+                            dropdown.append(`<option value="${med.id}" data-price="${med.sale_price}" data-stock="${med.stock}">${med.name}</option>`);
+                        });
+                        dropdown.show();
+                    } else {
+                        dropdown.hide();
+                    }
+                }
+            });
+        } else {
+            $('#medicine-dropdown').hide();
+        }
+    });
+
+    $('#medicine-dropdown').on('change', function () {
+        let selectedId = $(this).val();
+        let selectedMedicine = medicines.find(med => med.id == selectedId);
+        if (selectedMedicine) {
+            let exists = cart.find(item => item.id === selectedMedicine.id);
+            if (!exists) {
+                cart.push({
+                    id: selectedMedicine.id,
+                    name: selectedMedicine.name,
+                    quantity: 1,
+                    price: parseFloat(selectedMedicine.sale_price)
+                });
+            }
+            updateCartTable();
+            $('#medicine-dropdown').hide();
+            $('#search').val('');
+        }
+    });
+
+    $(document).on('input', '.quantity-input', function () {
+        let index = $(this).data('index');
+        let newQty = parseInt($(this).val());
+        if (!isNaN(newQty) && newQty > 0) {
+            cart[index].quantity = newQty;
+            updateCartTable();
+        }
+    });
+
+    $(document).on('click', '.delete-btn', function () {
+        let index = $(this).data('index');
+        cart.splice(index, 1);
+        updateCartTable();
+    });
+
+    $('#clear-cart').on('click', function () {
+        cart = [];
+        updateCartTable();
+    });
+
+    $('#proceed').on('click', function () {
+        if (cart.length === 0) {
+            alert('Cart is empty');
+            return;
+        }
+        sessionStorage.setItem('cart', JSON.stringify(cart));
+        window.location.href = "{% url 'pharmacy:receipt' %}";
+    });
+
+    $(document).ready(function () {
+        let storedCart = sessionStorage.getItem('cart');
+        if (storedCart) {
+            cart = JSON.parse(storedCart);
+            updateCartTable();
+        }
+    });
+</script>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

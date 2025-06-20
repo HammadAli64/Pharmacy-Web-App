@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Receipt</title>
+    <style>
+        @media print {
+            #print-button, #user-form {
+                display: none;
+            }
+            body {
+                margin: 0;
+            }
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            max-width: 58mm;
+            margin: auto;
+            font-size: 12px;
+            padding: 10px;
+        }
+
+        h1, .datetime, .centered {
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 14px;
+            margin: 4px 0;
+        }
+
+        .datetime {
+            font-size: 11px;
+            margin-bottom: 4px;
+        }
+
+        p {
+            margin: 2px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 6px;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 2px 0;
+        }
+
+        th {
+            border-bottom: 1px dashed #000;
+        }
+
+        #total-section {
+            margin-top: 10px;
+            font-weight: bold;
+            text-align: right;
+        }
+
+        hr {
+            border: none;
+            border-top: 1px dashed #000;
+            margin: 6px 0;
+        }
+    </style>
+</head>
+<body>
+
+
+
+
+    <h1><b>AL-Rehmat Clinic And Pharmacy</b></h1>
+    <p class="centered" style="font-size: 10px;"><b>Clinic Contact Number: 0335-0212224</b></p>
+    <hr>
+
+    <!-- User Input Form -->
+    <form id="user-form">
+        <label>Name: <input type="text" id="user-name" required></label><br>
+        <label>Discount (%): <input type="number" id="user-discount" value="0" min="0" max="100" required></label><br>
+    </form>
+
+    <!-- Receipt Content -->
+    <div id="receipt-content" style="display:none;">
+        <p>Patient Name: <span id="display-name"></span></p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Medicine</th>
+                    <th>Qty</th>
+                    <th>Price</th>
+                </tr>
+            </thead>
+            <tbody id="receipt-table-body"></tbody>
+        </table>
+
+        <div id="total-section" style="clear: both;">
+    <p>Discount: Rs <span id="discount-amount">0.00</span></p>
+    <p style="font-weight: bold;">Total: Rs <span id="cart-total-price">0.00</span></p>
+</div>
+<hr>
+        <p class="centered">Thank you for your visit!</p>
+    </div>
+    <div class="datetime">
+        <p id="current-datetime"></p>
+    </div>
+
+    <p class="centered" style="font-size: 10px;"><b>Software is Developed by Hammad Ali. For any type of Software, Contact: 0310-4777353</b> </p>
+
+
+    <button type="button" id="print-button">Print </button>
+
+    <script>
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === name + '=') {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // Debug: Log cart content
+            const cart = JSON.parse(sessionStorage.getItem('cart') || '[]');
+            console.log('Cart content on receipt page:', cart);
+
+            const tbody = document.getElementById('receipt-table-body');
+            let totalPrice = 0;
+
+            tbody.innerHTML = '';
+
+            if (cart.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td colspan="3" style="text-align:center;">No items in cart</td>`;
+                tbody.appendChild(row);
+            } else {
+                cart.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${item.name}</td>
+                        <td>${item.quantity}</td>
+                        <td>${(item.price * item.quantity).toFixed(2)}</td>
+                    `;
+                    tbody.appendChild(row);
+                    totalPrice += item.price * item.quantity;
+                });
+            }
+
+            // Get discount percentage from input
+            const discountPercentInput = document.getElementById('user-discount');
+            let discountPercent = 0;
+            if (discountPercentInput) {
+                discountPercent = parseFloat(discountPercentInput.value) || 0;
+            }
+
+            // Calculate discount amount and final total
+            const discountAmount = totalPrice * (discountPercent / 100);
+            const finalTotal = totalPrice - discountAmount;
+
+            // Update display
+            document.getElementById('discount-amount').textContent = discountAmount.toFixed(2);
+            document.getElementById('cart-total-price').textContent = finalTotal.toFixed(2);
+
+            // Show receipt content immediately
+            document.getElementById('receipt-content').style.display = 'block';
+
+            // Update receipt name and discount display on input change
+            const nameInput = document.getElementById('user-name');
+            const discountInput = document.getElementById('user-discount');
+            const displayName = document.getElementById('display-name');
+
+            function updateReceiptInfo() {
+                const name = nameInput.value;
+                const discount = parseFloat(discountInput.value) || 0;
+                displayName.textContent = name;
+                document.getElementById('discount-amount').textContent = (totalPrice * (discount / 100)).toFixed(2);
+                document.getElementById('cart-total-price').textContent = (totalPrice - (totalPrice * (discount / 100))).toFixed(2);
+            }
+
+            nameInput.addEventListener('input', updateReceiptInfo);
+            discountInput.addEventListener('input', updateReceiptInfo);
+
+            updateReceiptInfo();
+
+            document.getElementById('print-button').addEventListener('click', function () {
+                // Date and time
+                const now = new Date();
+let hours = now.getHours();
+const minutes = String(now.getMinutes()).padStart(2, '0');
+const seconds = String(now.getSeconds()).padStart(2, '0');
+const ampm = hours >= 12 ? 'PM' : 'AM';
+hours = hours % 12;
+hours = hours ? hours : 12; // convert 0 to 12
+
+const fullDateTime = now.getFullYear() + "-" +
+    String(now.getMonth() + 1).padStart(2, '0') + "-" +
+    String(now.getDate()).padStart(2, '0') + " " +
+    hours + ":" + minutes + ":" + seconds + " " + ampm;
+
+document.getElementById('current-datetime').textContent = fullDateTime;
+
+
+                // Hide form and print receipt
+                document.getElementById('user-form').style.display = 'none';
+
+                // Slight delay to ensure layout updates before print
+                setTimeout(() => {
+                    window.print();
+                }, 300);
+
+                // Send to backend
+                fetch('/receipt/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({
+                        user_info: { name: nameInput.value, discount: parseFloat(discountInput.value) || 0 },
+                        cart: cart
+                    })
+                }).then(response => {
+
+                }).catch(error => {
+                    console.error('Error:', error);
+                    alert("Something went wrong.");
+                });
+            });
+        });
+    </script>
+</body>
+</html>
